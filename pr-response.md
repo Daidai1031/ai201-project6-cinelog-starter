@@ -15,7 +15,8 @@ e.g.  "[models.py](models.py) Summarize what this file is responsible for, what 
   alphabetical lookup and the lack of user research, then finalized the
   reasoning in my own words.(comment5)
 
-
+## git log --oneline screenshot
+![alt text](image.png)
 
 ## Comment 1 — Rename
 
@@ -97,7 +98,13 @@ viewing interests, so showing them first makes it easier to answer, “What
 did I recently save to watch?” This also matches CineLog's existing
 collection behavior, which already returns newer entries first. I changed
 `get_watchlist()` to order by `WatchlistEntry.date_added` descending and
-added a test that verifies the newer entry is returned first.
+added a test that verifies the newer entry is returned first. Writing that
+test also surfaced a pre-existing bug: `Film` had no relationship back to
+`WatchlistEntry`, so `entry.film.to_dict()` in `get_watchlist()` raised an
+`AttributeError` any time the function was actually called — it had no test
+coverage before this PR. I added the missing `watchlist_entries` relationship
+on `Film` (mirroring the existing `collection_entries` relationship) to fix
+it.
 
 **Engagement with reviewer's point:**
 I agree with the maintainer that recent additions are the more useful
@@ -148,3 +155,56 @@ confirmed a zero exit status, showing that the updated `origin/main` is an
 ancestor of the rebased branch.
 
 ## PR Description
+
+### What this PR does
+
+This PR adds a **watchlist** feature to CineLog, letting a user save films
+they intend to watch later, separate from their existing film collection.
+
+- `POST /watchlist/<user_id>/add` — add a film to a user's watchlist, given
+  `{ "film_id": "<uuid>" }` in the request body. Returns `201` with the new
+  entry, `404` if the film does not exist, and `409` if the film is already
+  on that user's watchlist.
+- `GET /watchlist/<user_id>` — return all films on a user's watchlist, each
+  annotated with `date_added` and `public`.
+- A new `WatchlistEntry` model tracks `user_id`, `film_id`, `date_added`, and
+  a `public` flag, with `film_id` stored as a UUID string to match the
+  post-refactor `Film.id` on `main`.
+- Duplicate adds are rejected with `AlreadyInWatchlistError` instead of
+  creating a second row for the same `(user_id, film_id)` pair.
+
+### Design decisions
+
+- **Default visibility:** `WatchlistEntry.public` defaults to `False`. A
+  saved-for-later list can reveal interests a user hasn't chosen to make
+  public, and a private default is the reversible choice for users who never
+  visit the visibility setting. See Comment 4 above for the full reasoning.
+- **Sort order:** `get_watchlist()` returns entries ordered by
+  `WatchlistEntry.date_added` descending (newest first), matching the
+  existing `get_collection()` behavior and answering "what did I recently
+  save?" See Comment 5 above for the full reasoning.
+
+### How to test manually
+
+1. Start the app: `flask run` (or however this project normally starts).
+2. Create a user and a film if you don't already have their UUIDs (via the
+   existing `/users` and `/films` endpoints, or by inspecting the seeded
+   test data).
+3. Add a film to the watchlist:
+   ```bash
+   curl -X POST http://localhost:5000/watchlist/<user_id>/add \
+     -H "Content-Type: application/json" \
+     -d '{"film_id": "<film_id>"}'
+   ```
+   Expect `201` and the new entry back in the response body.
+4. Repeat the same request. Expect `409` and an error message — the entry
+   should not be duplicated.
+5. Try adding a film with a made-up UUID as `film_id`. Expect `404`.
+6. Add a second film, then view the watchlist:
+   ```bash
+   curl http://localhost:5000/watchlist/<user_id>
+   ```
+   Expect both films back, each with `public: false` by default, and the
+   **second film listed first** (newest added first).
+7. Run the automated tests: `pytest tests/test_watchlist.py -v` and
+   `pytest -q` for the full suite.
