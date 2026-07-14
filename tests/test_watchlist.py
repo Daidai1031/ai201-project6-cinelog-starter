@@ -6,7 +6,7 @@ Tests for the watchlist service.
 
 import pytest
 from app import create_app, db
-from models import User 
+from models import Film, User
 from services.collection_service import FilmNotFoundError
 from services.watchlist_service import add_to_watchlist
 

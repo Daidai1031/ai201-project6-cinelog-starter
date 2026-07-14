@@ -115,7 +115,36 @@ order.
 A refactor merged to main that changed film IDs from integers to UUIDs. Your watchlist code still references integer IDs. Please rebase on main and update accordingly.
 
 **What conflicted:**
+
+The rebase produced an add/add conflict in `.gitignore` because both the
+feature branch and `main` had added that file independently. There was also a
+semantic conflict that Git did not mark with conflict markers: the UUID
+refactor on `main` removed the legacy `WatchlistEntry`, while the watchlist
+service still imported and used that model. The remaining watchlist
+documentation also described `film_id` as an integer even though `Film.id` is
+now a UUID string.
+
 **How I resolved it:**
+
+I kept the combined `.gitignore` rules, including `main`'s generated-file
+entries such as `.pytest_cache/`, staged the resolved file, and continued the
+rebase with `git rebase --continue`. After all feature commits had been
+replayed on `origin/main`, I restored `WatchlistEntry` using the post-refactor
+schema: its `film_id` foreign key uses `db.String(36)` so it matches
+`Film.id`. I also updated the watchlist service parameter documentation and
+the route request-body example to describe `film_id` as a UUID string rather
+than an integer.
+
 **How I verified no conflict remains:**
+
+I searched the watchlist model, service, route, and tests for remaining
+integer-ID references and confirmed that watchlist film IDs consistently use
+UUID strings. I ran `pytest tests/test_watchlist.py -v` followed by `pytest
+-q` to check the focused behavior and the full test suite. Finally, I ran
+`git log --oneline --merges origin/main..HEAD` and confirmed that it produced
+no output, which shows that the feature branch adds no merge commits after
+the rebase. I also used `git merge-base --is-ancestor origin/main HEAD` and
+confirmed a zero exit status, showing that the updated `origin/main` is an
+ancestor of the rebased branch.
 
 ## PR Description
