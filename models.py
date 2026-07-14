@@ -90,7 +90,7 @@ class WatchlistEntry(db.Model):
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
     )
-    public = db.Column(db.Boolean, default=True)
+    public = db.Column(db.Boolean, default=False)
     
     def to_dict(self):
         return {
