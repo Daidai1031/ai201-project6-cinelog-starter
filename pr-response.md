@@ -22,8 +22,12 @@ Searched the repository to confirm that no references to `save_to_watchlist` rem
 What happens if a user calls this with a film that's already on their watchlist? The current implementation would add a duplicate entry. Please handle this case.
 
 **What I did:**
+1. read `add_to_collection() in services/collection_service.py` carefully.
+2. define a new class: `AlreadyInWatchlistError` and revise the `add_to_watchlist()`'s docstring
+3. Added an `AlreadyInWatchlistError` and updated `add_to_watchlist()` to check for an existing `WatchlistEntry` with the same `user_id` and `film_id` before creating a new entry. Duplicate requests are rejected instead of creating another database record. I also updated the watchlist route to return HTTP 409 for this conflict.
 
 **How I verified:**
+Added the same film to the same user's watchlist twice and confirmed that the second request was rejected while only one matching `WatchlistEntry` remained in the database. I also ran `pytest -q` and confirmed that all 4 existing tests passed.
 
 ## Comment 3 — Missing test
 
