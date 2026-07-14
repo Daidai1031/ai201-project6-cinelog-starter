@@ -8,7 +8,7 @@ from app import db
 from models import Film, WatchlistEntry
 from services.collection_service import FilmNotFoundError
 
-class AlreadyInWatchlistsError(Exception):
+class AlreadyInWatchlistError(Exception):
     """Raised when a film is already in the user's Watchlists."""
     pass
 
@@ -25,7 +25,7 @@ def add_to_watchlist(user_id, film_id):
 
     Raises:
         FilmNotFoundError: If film_id does not exist.
-        AlreadyInWatchlistsError: If the film is already in the user's Watchlists.
+        AlreadyInWatchlistError: If the film is already in the user's Watchlists.
     """
     film = db.session.get(Film, film_id)
     if film is None:
@@ -35,8 +35,8 @@ def add_to_watchlist(user_id, film_id):
         user_id=user_id, film_id=film_id
     ).first()
     if existing:
-        raise AlreadyInWatchlistsError(
-            f"Film '{film_id}' is already in this user's collection"
+        raise AlreadyInWatchlistError(
+            f"Film '{film_id}' is already in this user's watchlist"
         )
     
     entry = WatchlistEntry(user_id=user_id, film_id=film_id)

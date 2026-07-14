@@ -5,7 +5,7 @@ Endpoints for the watchlist feature.
 """
 
 from flask import Blueprint, jsonify, request
-from services.watchlist_service import add_to_watchlist, get_watchlist, AlreadyInWatchlistsError
+from services.watchlist_service import add_to_watchlist, get_watchlist, AlreadyInWatchlistError
 from services.collection_service import FilmNotFoundError
 
 watchlist_bp = Blueprint("watchlist", __name__)
@@ -33,10 +33,9 @@ def add_film(user_id):
         entry = add_to_watchlist(
             user_id=user_id,
             film_id=data["film_id"],
-            rating=data.get("rating"),
         )
         return jsonify(entry.to_dict()), 201
     except FilmNotFoundError as e:
         return jsonify({"error": str(e)}), 404
-    except AlreadyInWatchlistsError as e:
+    except AlreadyInWatchlistError as e:
         return jsonify({"error": str(e)}), 409

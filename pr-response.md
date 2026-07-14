@@ -34,8 +34,13 @@ Added the same film to the same user's watchlist twice and confirmed that the se
 Please add a test for the case where film_id doesn't exist in the database. Look at the existing tests in test_collection.py — the pattern is there.
 
 **What I did:**
+1. read `tests\test_collection.py` carefully, and learnt form it
+2. Added `tests/test_watchlist.py` with a test confirming that
+`add_to_watchlist()` raises `FilmNotFoundError` when given a film ID
+that does not exist. 
 
 **How I verified:**
+Ran `pytest tests/test_watchlist.py -v` and confirmed that the test passed.
 
 ## Comment 4 — Default visibility
 
