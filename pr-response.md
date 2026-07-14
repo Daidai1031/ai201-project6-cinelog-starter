@@ -9,6 +9,14 @@ e.g.  "[models.py](models.py) Summarize what this file is responsible for, what 
   `public=True` position and identify counterarguments or tradeoffs I had
   missed. I used the critique to reconsider the position, then wrote the final
   CineLog-specific reasoning below in my own words. (comment4)
+  After drafting my Comment 5 response, I asked AI
+  to act as a careful reviewer and identify counterarguments and missing
+  tradeoffs in the newest-first decision. I used the critique to address
+  alphabetical lookup and the lack of user research, then finalized the
+  reasoning in my own words.(comment5)
+
+
+
 ## Comment 1 — Rename
 
 save_to_watchlist() should follow the project's naming convention. Compare with add_to_collection() — the pattern here is verb_to_noun. Please rename to add_to_watchlist() and update all call sites.
@@ -80,9 +88,27 @@ privacy-preserving default.
 
 I'd prefer watchlists to default to "date added" order rather than alphabetical. Most users want to see what they added recently. I'm open to discussion if you see it differently — but let's make a decision and document it.
 
-**My position:**
+**My position:** I agree with the maintainer and will use date added, newest first, as the default watchlist order.
+
 **Reasoning:**
+A watchlist primarily helps CineLog users return to films they saved for
+later. Recently added films are more likely to reflect a user's current
+viewing interests, so showing them first makes it easier to answer, “What
+did I recently save to watch?” This also matches CineLog's existing
+collection behavior, which already returns newer entries first. I changed
+`get_watchlist()` to order by `WatchlistEntry.date_added` descending and
+added a test that verifies the newer entry is returned first.
+
 **Engagement with reviewer's point:**
+I agree with the maintainer that recent additions are the more useful
+default for most watchlist visits. Alphabetical sorting still has an
+advantage when a user knows the title and wants to locate it in a long
+list, so it would be a useful optional sort mode in the future. However,
+for a single default, newest-first better supports the common behavior of
+returning to films that were just saved. This decision is based on the
+current product behavior rather than user research, so it should be
+revisited if CineLog later collects evidence that users prefer another
+order.
 
 ## Comment 6 — Rebase
 
